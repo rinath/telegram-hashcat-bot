@@ -6,4 +6,6 @@ pip3 install telepot
 pip3 install pillow
 ```
 # Runing
+```
 sudo python3 bot.py
+```
