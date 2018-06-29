@@ -38,6 +38,7 @@ class Hashcat:
 				except:
 					break
 		else:
+			self.chat_id = -1
 			queries = self.parse_queue(True)
 			if queries is not None:
 				print('Hashcat.update: queries:' + str(queries))

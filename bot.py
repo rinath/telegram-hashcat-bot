@@ -127,7 +127,7 @@ class Chat:
 				else:
 					self.chooser.send_chooser(mType, self.directory[mType])
 				return
-		self.exec_command = 'sudo hashcat ' + self.options[TYPE_OPTIONS] + ' --potfile-path="'
+		self.exec_command = 'hashcat ' + self.options[TYPE_OPTIONS] + ' --potfile-path="'
 		self.exec_command += self.directory[TYPE_HASHFILES] + self.potfile + '" "'
 		self.exec_command += self.options[TYPE_HASHFILES] + '" "' + self.options[TYPE_DICTIONARY] + '"'
 		self.bot.sendMessage(self.chat_id, '<code>' + self.exec_command + '</code>', parse_mode='HTML',
