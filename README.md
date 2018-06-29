@@ -13,6 +13,7 @@ Uploaded .txt files are stored in wordlists/ and all other files are in document
 ```
 pip3 install telepot
 pip3 install pillow
+pip3 install pexpect
 ```
 # Runing
 ```
