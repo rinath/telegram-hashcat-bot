@@ -100,10 +100,10 @@ class Chat:
 				text = file.read()
 			except:
 				open(self.directory[TYPE_HASHFILES] + self.potfile, 'w')
-			#text = subprocess.check_output('cat ' + self.directory[TYPE_HASHFILES] + self.potfile, shell=True).decode('utf-8')
-			lines = text.splitlines()
-			passwords = [' '.join(x.split(':')[3:5]) for x in lines]
-			text = '\n'.join(passwords)
+			text = subprocess.check_output('cat ' + self.directory[TYPE_HASHFILES] + self.potfile, shell=True).decode('utf-8')
+			#lines = text.splitlines()
+			#passwords = [' '.join(x.split(':')[3:5]) for x in lines]
+			#text = '\n'.join(passwords)
 			if len(text) < 3:
 				self.bot.sendMessage(self.chat_id, 'Potfile is empty')
 			else:
