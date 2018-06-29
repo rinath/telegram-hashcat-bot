@@ -74,16 +74,25 @@ class Chat:
 			if len(command) > 1:
 				self.hashcat.send_keystroke(command[1])
 				time.sleep(0.1)
-			screnshot = 'terminal.png'
-			if self.hashcat.save_screenshot(screnshot):
-				buttons = ['s', 'p', 'r', 'b', 'c', 'q']
-				keyboard = [[InlineKeyboardButton(text=button, callback_data='/status ' + button) for button in buttons]]
-				self.bot.sendPhoto(self.chat_id, photo=open(screnshot, 'rb'), reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard))
-			else:
-				if self.hashcat.get_status():
-					self.bot.sendMessage(self.chat_id, 'No terminal output yet')
+			hashcat_status = self.hashcat.get_status(self.chat_id)
+			if hashcat_status == Hashcat.STATUS_RUNNING:
+				screnshot = 'terminal.png'
+				if self.hashcat.save_screenshot(screnshot):
+					buttons = ['s', 'p', 'r', 'b', 'c', 'q']
+					keyboard = [[InlineKeyboardButton(text=button, callback_data='/status ' + button) for button in buttons]]
+					self.bot.sendPhoto(self.chat_id, photo=open(screnshot, 'rb'),
+						reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard))
 				else:
-					self.bot.sendMessage(self.chat_id, 'Hashcat is not running. Send /status or /potfile comands')
+					self.bot.sendMessage(self.chat_id, 'No terminal output yet')
+			elif hashcat_status == Hashcat.STATUS_STOPPED:
+				self.bot.sendMessage(self.chat_id, 'Hashcat is not running. Send /status or /potfile comands')
+			elif hashcat_status == Hashcat.STATUS_DIFFERENT_USER:
+				(first, count) = self.hashcat.get_queue_position(self.chat_id)
+				if count != 0:
+					self.bot.sendMessage(self.chat_id, 'There are ' + str(count) + ' queries before you')
+				else:
+					self.bot.sendMessage(self.chat_id, 'You dont have any queries')
+
 		elif command[0] == '/potfile':
 			text = ''
 			try:
@@ -104,7 +113,7 @@ class Chat:
 		elif command[0] == '/cmd' and len(command) > 1:
 			print('executing: ' + command[1])
 			self.hashcat.add_to_queue(command[1], self.chat_id)
-			self.bot.sendMessage(self.chat_id, 'Wait a couple of secs and then you can send /status or /potfile commands')
+			self.bot.sendMessage(self.chat_id, 'Wait a couple of seconds and then send /status or /potfile commands')
 		else:
 			self.bot.sendMessage(self.chat_id, 'unrecognized command')
 
@@ -118,7 +127,7 @@ class Chat:
 				else:
 					self.chooser.send_chooser(mType, self.directory[mType])
 				return
-		self.exec_command = 'sudo hashcat ' + self.options[TYPE_OPTIONS] + ' --status-timer 1 --status --potfile-path="'
+		self.exec_command = 'sudo hashcat ' + self.options[TYPE_OPTIONS] + ' --potfile-path="'
 		self.exec_command += self.directory[TYPE_HASHFILES] + self.potfile + '" "'
 		self.exec_command += self.options[TYPE_HASHFILES] + '" "' + self.options[TYPE_DICTIONARY] + '"'
 		self.bot.sendMessage(self.chat_id, '<code>' + self.exec_command + '</code>', parse_mode='HTML',
@@ -233,8 +242,7 @@ class HashBot:
 		MessageLoop(self.bot, {'chat': self.handle_message, 'callback_query': self.handle_callback}).run_as_thread()
 		while 1:
 			self.hashcat.update()
-			self.hashcat.get_status()
-			time.sleep(5)
+			time.sleep(0.1)
 
-mybot = HashBot('536267386:AAGJUhuC1LQe6avvx79A2xlqpQLArQ_jumQ')
+mybot = HashBot('615164406:AAFFc86M5WE6NJvlMA6oC-99GpORq5Q08C4')
 mybot.start()

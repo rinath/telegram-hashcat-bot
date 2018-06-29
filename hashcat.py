@@ -5,7 +5,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 class Hashcat:
 
-	COMMAND_PAUSE, COMMAND_RESUME, COMMAND_STOP = range(3)
+	STATUS_RUNNING = 0
+	STATUS_STOPPED = 1
+	STATUS_DIFFERENT_USER = 2
 
 	def __init__(self):
 		self.filename = 'queue.txt'
@@ -26,34 +28,60 @@ class Hashcat:
 			while True:
 				try:
 					self.process.expect('\n')
-					self.buffer.append(self.process.before.decode('ascii', errors='ignore').rstrip())
+					txt = self.process.before.decode('ascii', errors='ignore').rstrip()
+					self.buffer.append(txt)
+					print('>>>>' + txt)
 					if len(self.buffer) > 200:
 						self.buffer = self.buffer[100:]
 				except pexpect.TIMEOUT:
 					break
-				except Exception as ex:
+				except:
 					break
 		else:
 			queries = self.parse_queue(True)
 			if queries is not None:
 				print('Hashcat.update: queries:' + str(queries))
 				self.process = pexpect.spawn(queries[1], timeout=0.1)
+				self.chat_id = int(queries[0])
+				print('Hashcat.update: chat_id:', self.chat_id)
 
-	def get_status(self):
-		return self.process is not None and self.process.isalive()
-		#print(self.buffer)
+	def get_status(self, chat_id):
+		if self.chat_id == chat_id:
+			if self.process is not None and self.process.isalive():
+				return self.STATUS_RUNNING
+			else:
+				return self.STATUS_STOPPED
+		else:
+			return self.STATUS_DIFFERENT_USER
+
+	def get_queue_position(self, chat_id):
+		if chat_id == self.chat_id:
+			return (0, 0)
+		else:
+			with open(self.filename, 'r') as f:
+				queries = f.read().splitlines()
+				count = 0
+				first = -1
+				for i in range(len(queries)):
+					if int(queries[i].split()[0]) == chat_id:
+						count += 1
+						if first == -1:
+							first = i
+				return (first, count)
+			return (-1, 0)
 
 	def parse_queue(self, remove_first=False):
 		with open(self.filename, 'r+') as f:
 			queries = f.read().splitlines()
 			if len(queries) > 0:
-				queries = [query.split(' ', 1) for query in queries]
+				ans = [query.split(' ', 1) for query in queries]
 				if remove_first:
+					print('Hashcat.parse_queue: queries[1:] =', queries[1:])
 					f.seek(0)
 					f.write('\n'.join(queries[1:]))
 					f.truncate()
-					return queries[0]
-				return queries
+					return ans[0]
+				return ans
 		return None
 
 	def save_screenshot(self, filename):
@@ -87,3 +115,4 @@ class Hashcat:
 		if self.process is not None and self.process.isalive():
 			print('Hashcat.send_keystroke: ' + key)
 			self.process.send(key)
+			time.sleep(0.3)
