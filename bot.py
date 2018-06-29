@@ -225,19 +225,40 @@ class HashBot:
 		self.bot = telepot.Bot(token)
 		self.hashcat = Hashcat()
 		print('Hashbot.__init__(): hashcat.update()')
+		self.admins_file = 'admins.txt'
+		self.admins = []
+		try:
+			file = open(self.admins_file, 'r')
+			print('opened admins_file')
+			lines = file.readlines()
+			self.admins = [int(line.strip()) for line in lines]
+			file.close()
+		except:
+			open(self.admins_file, 'w')
 
 	def handle_message(self, msg):
 		content_type, chat_type, chat_id = telepot.glance(msg)
 		if chat_id not in self.chats:
 			self.chats[chat_id] = Chat(chat_id, self.bot, self.hashcat)
-		self.chats[chat_id].on_message_received(msg)
+		if chat_id in self.admins:
+			self.chats[chat_id].on_message_received(msg)
+		else:
+			self.deny_permission(chat_id)
 
 	def handle_callback(self, msg):
 		content_type, chat_type, chat_id = telepot.glance(msg['message'])
 		if chat_id not in self.chats:
 			self.chats[chat_id] = Chat(chat_id, self.bot, self.hashcat)
-		self.chats[chat_id].on_callback_received(msg)
-		
+		if chat_id in self.admins:
+			self.chats[chat_id].on_callback_received(msg)
+		else:
+			self.deny_permission(chat_id)
+
+	def deny_permission(self, chat_id):
+		print('admins:', self.admins)
+		self.bot.sendMessage(chat_id, "You are not authorized to use this bot. Your chat id is: <code>" + \
+			str(chat_id) + "</code> add it to <code>$bot$/admins.txt</code>", parse_mode='HTML')
+
 	def start(self):
 		MessageLoop(self.bot, {'chat': self.handle_message, 'callback_query': self.handle_callback}).run_as_thread()
 		while 1:
