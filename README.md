@@ -1,5 +1,6 @@
 # telegram-hashcat-bot
-A telegram bot that is an interface for hashcat
+A telegram bot which is an interface for hashcat, hash cracking program.
+This bot was written during internship in "ЦАРКА, Центр Анализа и Расследования Кибер Атак" in 2018
 # commands
 There are two ways of sending commands:  
 /begin - Easy gui version  
